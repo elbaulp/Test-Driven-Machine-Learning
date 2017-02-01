@@ -13,7 +13,8 @@ lazy val root = (project in file(".")).
       "ch.qos.logback" % "logback-classic" % "1.1.8",
       "org.specs2" %% "specs2-core" % "3.8.6" % "test",
       "org.specs2" %% "specs2-gwt" % "3.8.6" % "test",
-      "org.scala-saddle" %% "saddle-core" % "1.3.4"
+      "org.scala-saddle" %% "saddle-core" % "1.3.4",
+      "org.apache.spark" %% "spark-mllib" % "2.1.0"
     ),
     resolvers ++= Seq(
       "Sonatype Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
