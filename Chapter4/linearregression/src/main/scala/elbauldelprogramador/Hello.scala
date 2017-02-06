@@ -1,52 +1,31 @@
 package elbauldelprogramador
 
-import org.apache.spark.SparkConf
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.regression.LinearRegression
-import org.apache.spark.mllib.linalg.{ DenseVector, VectorUDT, Vectors }
+import org.apache.spark.mllib.linalg.VectorUDT
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.types.{DoubleType, StructType}
+import org.apache.spark.sql.functions.udf
+import org.apache.spark.sql.types.StructType
 
 object SimpleApp {
   def main(args: Array[String]): Unit = {
 
-    val logFile = "/home/hkr/Desarrollo/scala/TDD/Chapter4/linearregression/build.sbt" // Should be some file on your system
-
-    val conf = new SparkConf().
-      setAppName("Simple Application").
-      setMaster("local[2]")
-
-//    val sc = new SparkContext(conf)
-
-
-    val sparkSession = SparkSession.builder.
+    val spark = SparkSession.builder.
       master("local")
       .appName("spark session example")
       .getOrCreate()
 
-    import org.apache.spark.sql.functions._
-
-    val toInt    = udf[Int, String]( _.toInt)
-    val toDouble = udf[Double, String]( _.toDouble)
-
-    // val df = sparkSession.read.option("header","true").
-    //   csv(this.getClass.getResource("/generated_data.csv").getPath).
-    //   withColumnRenamed("dependent_var", "features")
-
-//    df.printSchema()
-
-    val df5 = sparkSession.read.format("csv").
+    val df = spark.read.format("csv").
       option("header", "true").
       load(this.getClass.getResource("/generated_data.csv").getPath)
 
-
-    df5.printSchema()
-//    out.printSchema()
+    df.printSchema()
 
     val schema = new StructType()
      .add("features", new VectorUDT())
 
-    val df2 = df5.withColumn("dependent_var", toDouble(df5("dependent_var")))
+    val toDouble = udf[Double, String]( _.toDouble)
+    val df2 = df.withColumn("dependent_var", toDouble(df("dependent_var")))
 
     val assembler = new VectorAssembler().
       setInputCols(Array("dependent_var")).
@@ -57,13 +36,6 @@ object SimpleApp {
     df2.printSchema()
     out.printSchema()
 
-
-    // val vectorHead = udf{ x:DenseVector => x(0) }
-    // val df6 = df5.withColumn("features", Vectors.dense(df5.col("features")))
-
-    //df6.printSchema()
-
-    //df2.printSchema()
 
     val lr = new LinearRegression()
       .setMaxIter(10)
@@ -84,8 +56,8 @@ object SimpleApp {
     // println(s"RMSE: ${trainingSummary.rootMeanSquaredError}")
     // println(s"r2: ${trainingSummary.r2}")
 
-    df5.show()
+//    df.show()
 //    sc.stop()
-    sparkSession.close()
+    spark.close()
   }
 }
