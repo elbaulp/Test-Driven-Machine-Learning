@@ -9,10 +9,10 @@ class RegressionSpec extends Specification
   with StandardRegexStepParsers {
   def is =
     s2"""
-      LinearRegression Test                    ${vanillaModelSce.start}
+      LinearRegression Test                                                        ${vanillaModelSce.start}
         Given the DataSet 'generated_data.csv'
         When training a linear regression model
-        Then show the summary of the model  ${vanillaModelSce.end}
+        Then Prob(F-statistic) should be small enough to reject the null hypotesis ${vanillaModelSce.end}
     """
 
   private[this] val spark = SparkSession.builder.
@@ -28,9 +28,9 @@ class RegressionSpec extends Specification
             option("header", "true").
             option("inferSchema", "true").
             load(getClass.getResource("/generated_data.csv").getPath)
-          val df1 = df.select("dependent_var", "ind_var_d")
+          val df1 = df.select("dependent_var", "ind_var_a")
           val formula = new RFormula().
-            setFormula("dependent_var ~ ind_var_d").
+            setFormula("dependent_var ~ ind_var_a").
             setFeaturesCol("features").
             setLabelCol("label")
           val train = formula.fit(df1).transform(df1)
@@ -38,7 +38,9 @@ class RegressionSpec extends Specification
           // Fit the model
           val lr = new LinearRegression()
           val model = lr.fit(train)
+          val summ = model.summary
           println(s"Coefficients: ${model.coefficients} Intercept: ${model.intercept}")
+          summ.pValues(0)
       }.
-      andThen() { case _ => 4 must_== 4 }
+      andThen() { case _ :: result :: _ => result must be_<=(.05) }
 }
