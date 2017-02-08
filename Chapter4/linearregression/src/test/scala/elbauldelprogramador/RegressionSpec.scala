@@ -1,8 +1,11 @@
+package elbauldelprogramador.tests
+
 import org.specs2.Specification
 import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.ml.feature.RFormula
 import org.apache.spark.sql.SparkSession
 import org.specs2.specification.script.{ GWT, StandardRegexStepParsers }
+import org.log4s._
 
 class RegressionSpec extends Specification
   with GWT
@@ -12,8 +15,13 @@ class RegressionSpec extends Specification
       LinearRegression Test                                                        ${vanillaModelSce.start}
         Given the DataSet 'generated_data.csv'
         When training a linear regression model
-        Then Prob(F-statistic) should be small enough to reject the null hypotesis ${vanillaModelSce.end}
+        Then Prob(F-statistic) should be small enough to reject the null hypotesis
+        And model should explain 95% of the variation in the sampled data or more  ${vanillaModelSce.end}
     """
+
+  val adjR2 = (r2: Double, n: Long, k: Int) => 1 - ((1 - r2) * (n - 1)) / (n - k - 1)
+
+  private[this] val logger = getLogger
 
   private[this] val spark = SparkSession.builder.
     master("local").
@@ -39,8 +47,20 @@ class RegressionSpec extends Specification
           val lr = new LinearRegression()
           val model = lr.fit(train)
           val summ = model.summary
-          println(s"Coefficients: ${model.coefficients} Intercept: ${model.intercept}")
-          summ.pValues(0)
+          val r2adj = adjR2(summ.r2, train.count(), df1.columns.size - 1)
+          logger.debug(s"""
+            Coefficients: ${model.coefficients}
+            Intercept: ${model.intercept}
+            RootMeanSquareError: ${summ.rootMeanSquaredError}
+            MeanSquared Error ${summ.meanSquaredError}
+            DevianceResudials: ${summ.devianceResiduals.foreach(v => print(v + " "))}
+            CoeffcieitneStanaderError: ${summ.coefficientStandardErrors.foreach(v => print(v + " "))}
+            ExplainedVariance: $summ.explainedVariance
+            r2: ${summ.r2}
+            adjR2: $r2adj
+          """)
+          (summ.pValues(0), r2adj)
       }.
-      andThen() { case _ :: result :: _ => result must be_<=(.05) }
+      andThen() { case _ :: result :: _ => result._1 must be_<=(.05) }.
+      andThen(anInt) { case expected :: result :: _ => result._2 must be>=(expected/100.0) }
 }
