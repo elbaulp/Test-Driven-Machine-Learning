@@ -36,9 +36,9 @@ class RegressionSpec extends Specification
             option("header", "true").
             option("inferSchema", "true").
             load(getClass.getResource("/generated_data.csv").getPath)
-          val df1 = df.select("dependent_var", "ind_var_a")
+          val df1 = df.select("dependent_var", "ind_var_a", "ind_var_b", "ind_var_c", "ind_var_d")
           val formula = new RFormula().
-            setFormula("dependent_var ~ ind_var_a").
+            setFormula("dependent_var ~ ind_var_a + ind_var_b + ind_var_c + ind_var_d").
             setFeaturesCol("features").
             setLabelCol("label")
           val train = formula.fit(df1).transform(df1)
@@ -58,6 +58,7 @@ class RegressionSpec extends Specification
             ExplainedVariance: $summ.explainedVariance
             r2: ${summ.r2}
             adjR2: $r2adj
+            pValues: ${summ.pValues.foreach(println)}
           """)
           (summ.pValues(0), r2adj)
       }.
