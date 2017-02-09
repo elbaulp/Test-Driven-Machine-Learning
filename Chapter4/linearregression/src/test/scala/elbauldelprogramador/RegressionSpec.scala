@@ -32,13 +32,15 @@ class RegressionSpec extends Specification
     Scenario("Scenario1").
       when() {
         case _ =>
+
           val df = spark.read.format("csv").
             option("header", "true").
             option("inferSchema", "true").
             load(getClass.getResource("/generated_data.csv").getPath)
-          val df1 = df.select("dependent_var", "ind_var_a", "ind_var_b", "ind_var_c", "ind_var_d")
+
+          val df1 = df.select("dependent_var", "ind_var_a", "ind_var_b", "ind_var_c", "ind_var_e")
           val formula = new RFormula().
-            setFormula("dependent_var ~ ind_var_a + ind_var_b + ind_var_c + ind_var_d").
+            setFormula("dependent_var ~ ind_var_a + ind_var_b + ind_var_c + ind_var_e + ind_var_b:ind_var_c").
             setFeaturesCol("features").
             setLabelCol("label")
           val train = formula.fit(df1).transform(df1)
@@ -54,7 +56,6 @@ class RegressionSpec extends Specification
             RootMeanSquareError: ${summ.rootMeanSquaredError}
             MeanSquared Error ${summ.meanSquaredError}
             DevianceResudials: ${summ.devianceResiduals.foreach(v => print(v + " "))}
-            CoeffcieitneStanaderError: ${summ.coefficientStandardErrors.foreach(v => print(v + " "))}
             ExplainedVariance: $summ.explainedVariance
             r2: ${summ.r2}
             adjR2: $r2adj
