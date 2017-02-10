@@ -1,4 +1,4 @@
-package elbauldelprogramador.tests
+package elbauldelprogramador.tests.regression
 
 import org.specs2.Specification
 import org.apache.spark.ml.regression.LinearRegression
