@@ -30,7 +30,7 @@ class LogisticRegressionSpec extends Specification
     option("header", "true").
     option("inferSchema", "true").
     load(getClass.getResource("/generated_logistic_data.csv").getPath).
-    select("y", "variable_c")
+    select("y", "variable_b + variable_c")
 
   private[this] val logisticTest =
     Scenario("Scenario1").
@@ -51,10 +51,7 @@ class LogisticRegressionSpec extends Specification
           val binarySummary = trainingSummary.asInstanceOf[BinaryLogisticRegressionSummary]
           val roc = binarySummary.roc
           roc.show()
-          logger.debug(s"PVALUES:")
-          logger.debug(s"""
-             ${binarySummary..pValues.foreach(s => println("\t" + s))}"
-          """)
+
           logger.debug(s"areaUnderROC: ${binarySummary.areaUnderROC}")
 
           binarySummary.areaUnderROC
