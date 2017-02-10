@@ -114,7 +114,7 @@ class RegressionSpec extends Specification
           error
       }.
       andThen() { case _ :: r :: _ =>
+        spark.stop()
         r - 1 must be<=(.05)
       }
-
 }
