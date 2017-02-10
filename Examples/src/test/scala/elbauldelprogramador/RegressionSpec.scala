@@ -35,14 +35,14 @@ class RegressionSpec extends Specification
   val df = spark.read.format("csv").
     option("header", "true").
     option("inferSchema", "true").
-    load(getClass.getResource("/generated_data.csv").getPath)
-  val df1 = df.select("dependent_var", "ind_var_a", "ind_var_b", "ind_var_c", "ind_var_e")
+    load(getClass.getResource("/generated_data.csv").getPath).
+    select("dependent_var", "ind_var_a", "ind_var_b", "ind_var_c", "ind_var_e")
 
   val dfcv = spark.read.format("csv").
     option("header", "true").
     option("inferSchema", "true").
-    load(this.getClass.getResource("/generated_data_cv.csv").getPath)
-  val dfcv1 = df.select("dependent_var", "ind_var_a", "ind_var_b", "ind_var_c", "ind_var_e")
+    load(this.getClass.getResource("/generated_data_cv.csv").getPath).
+    select("dependent_var", "ind_var_a", "ind_var_b", "ind_var_c", "ind_var_e")
 
   private[this] val vanillaModelSce =
     Scenario("Scenario1").
@@ -54,13 +54,13 @@ class RegressionSpec extends Specification
             setFeaturesCol("features").
             setLabelCol("label")
 
-          val train = formula.fit(df1).transform(df1)
+          val train = formula.fit(df).transform(df)
           train.show()
           // Fit the model
           val lr = new LinearRegression()
           val model = lr.fit(train)
           val summ = model.summary
-          val r2adj = adjR2(summ.r2, train.count(), df1.columns.size - 1)
+          val r2adj = adjR2(summ.r2, train.count(), df.columns.size - 1)
           logger.debug(f"""
             Coefficients: ${model.coefficients}
             Intercept: ${model.intercept}
@@ -86,7 +86,7 @@ class RegressionSpec extends Specification
         case _ =>
           import spark.implicits._
 
-          val df2 = df1.withColumn("predicted_dependent",
+          val df2 = df.withColumn("predicted_dependent",
             lit(25.6266)
               + lit(2.7083) * 'ind_var_a
               - lit(1.5527) * 'ind_var_b
@@ -97,7 +97,7 @@ class RegressionSpec extends Specification
 
           logger.debug(s"${df2.select("diff").show()}")
 
-          val df3 = dfcv1.withColumn("predicted_dependent",
+          val df3 = dfcv.withColumn("predicted_dependent",
             lit(25.6266)
               + lit(2.7083) * 'ind_var_a
               - lit(1.5527) * 'ind_var_b

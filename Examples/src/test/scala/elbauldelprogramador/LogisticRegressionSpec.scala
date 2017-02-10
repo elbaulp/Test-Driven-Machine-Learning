@@ -30,7 +30,7 @@ class LogisticRegressionSpec extends Specification
     option("header", "true").
     option("inferSchema", "true").
     load(getClass.getResource("/generated_logistic_data.csv").getPath).
-    select("y", "variable_d")
+    select("y", "variable_e")
 
   private[this] val logisticTest =
     Scenario("Scenario1").
