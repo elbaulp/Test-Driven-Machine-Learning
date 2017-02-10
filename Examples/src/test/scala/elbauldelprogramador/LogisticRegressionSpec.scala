@@ -16,7 +16,7 @@ class LogisticRegressionSpec extends Specification
       LinearRegression Test                          ${logisticTest.start}
         Given the DataSet 'generated_logistic_data.csv'
         When training a Logistic regression model
-        Then AUC score should be above random (>60%) ${logisticTest.end}
+        Then AUC score should be above random (>80%) ${logisticTest.end}
     """
 
   private[this] val logger = getLogger
@@ -30,7 +30,7 @@ class LogisticRegressionSpec extends Specification
     option("header", "true").
     option("inferSchema", "true").
     load(getClass.getResource("/generated_logistic_data.csv").getPath).
-    select("y", "variable_b + variable_c")
+    select("y", "variable_a", "variable_b", "variable_c")
 
   private[this] val logisticTest =
     Scenario("Scenario1").
@@ -52,6 +52,7 @@ class LogisticRegressionSpec extends Specification
           val roc = binarySummary.roc
           roc.show()
 
+          logger.debug(s"Coefficients: ${lrModel.coefficients} Intercept: ${lrModel.intercept}")
           logger.debug(s"areaUnderROC: ${binarySummary.areaUnderROC}")
 
           binarySummary.areaUnderROC
