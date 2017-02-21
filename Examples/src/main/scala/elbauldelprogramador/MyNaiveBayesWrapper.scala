@@ -17,9 +17,6 @@ case class MyNaiveBayesWrapper(y:Option[Seq[String]] = None,
   def classify(observation:Double): Option[String] = model match {
     case label if model.nonEmpty =>
       val closest = label.values.minBy(v => math.abs(observation - v))
-      log.warn(s"$model")
-      log.warn(s"CLOSEST: $closest")
-      log.warn(s"find: ${model.find(_._2 == closest)}")
       Some(model.find(_._2 == closest).get._1)
     case _ => None
   }
