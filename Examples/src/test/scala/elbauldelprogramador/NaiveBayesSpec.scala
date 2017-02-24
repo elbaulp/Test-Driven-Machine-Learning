@@ -26,7 +26,7 @@ class NaiveBayesSpec extends Specification
         Given the observation 23.2
         Given another observation 73.2
         When Classifying
-        Then 23.2 should classify as A class and 72.3 as B       ${oneObsTwoClassSce.end}
+        Then should not be classify if there is only one obs in any class ${oneObsTwoClassSce.end}
 
                                                                  ${multipleObsTwoClassSce.start}
         [Multiple obs, two classes] Given the observation 23.2
@@ -63,7 +63,7 @@ class NaiveBayesSpec extends Specification
       classifier.classify(obs)
     }.
     andThen(){ case _ :: result :: _ =>
-      result must_== Some("a")
+      result must_== None
     }
 
   private[this] val oneObsTwoClassSce = Scenario("twoObs").
@@ -79,7 +79,7 @@ class NaiveBayesSpec extends Specification
       (classification, classification2)
     }.
     andThen(){ case _ :: r :: _ =>
-      (r._1.get must_== "b class") and (r._2.get must_== "a class")
+      (r._1 must_== None) and (r._2 must_== None)
     }
 
   private[this] val multipleObsTwoClassSce = Scenario("Multiple for Two class").

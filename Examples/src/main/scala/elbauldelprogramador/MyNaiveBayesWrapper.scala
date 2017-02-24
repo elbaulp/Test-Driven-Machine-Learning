@@ -8,6 +8,8 @@ case class MyNaiveBayesWrapper(y: Option[Map[String, Vector[Double]]] = None) {
   private[this] val log = getLogger
 
   def classify(observation: Double): Option[String] = y match {
+    case Some(m) if m.find(_._2.size <= 1).isDefined =>
+      None
     case Some(m) =>
 
       val labels = m.values.flatten
