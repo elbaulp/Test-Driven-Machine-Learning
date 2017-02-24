@@ -22,11 +22,17 @@ class NaiveBayesSpec extends Specification
         When classifying an observation 23.2
         Then the classifier should classify the observation as A ${oneObservationSce.end}
 
-                                                                 ${twoObservationsSce.start}
+                                                                 ${oneObsTwoClassSce.start}
         Given the observation 23.2
         Given another observation 73.2
         When Classifying
-        Then 23.2 should classify as A class and 72.3 as B       ${twoObservationsSce.end}
+        Then 23.2 should classify as A class and 72.3 as B       ${oneObsTwoClassSce.end}
+
+                                                                 ${multipleObsTwoClassSce.start}
+        [Multiple obs, two classes] Given the observation 23.2
+        Given another observation 2.0
+        When Classifying
+        Then 23.2 should classify as A class and 2.0 as B       ${multipleObsTwoClassSce.end}
     """
 
   val myDouble = groupAs("\\d+\\.\\d+").and((s: String) => s.toDouble)
@@ -42,7 +48,7 @@ class NaiveBayesSpec extends Specification
 
   private[this] val noObservationSce = Scenario("NoObs").
     when(){ case _ =>
-      val classifier = MyNaiveBayesWrapper(observations = Vector(23.2))
+      val classifier = MyNaiveBayesWrapper()
       classifier.classify(23.2)
     }.
     andThen(){ case _ :: result :: _ =>
@@ -52,19 +58,21 @@ class NaiveBayesSpec extends Specification
   private[this] val oneObservationSce = Scenario("oneObs").
     given(anInt).
     when(myDouble){ case obs :: a :: _ =>
-      val classifier = MyNaiveBayesWrapper(Some(Vector("a")), Vector(obs))
+      val train = Map("a" -> Vector(obs))
+      val classifier = MyNaiveBayesWrapper(Some(train))
       classifier.classify(obs)
     }.
     andThen(){ case _ :: result :: _ =>
       result must_== Some("a")
     }
 
-  private[this] val twoObservationsSce = Scenario("twoObs").
+  private[this] val oneObsTwoClassSce = Scenario("twoObs").
     given(myDouble).
     given(myDouble).
     when() {case _ :: obs1 :: obs2 :: _ =>
-      val classifier = MyNaiveBayesWrapper(Some(Vector("a class", "b class")),
-        observations = Vector(0.0, 100.0))
+      val train = Map[String, Vector[Double]]("a class" -> Vector(.0),
+        "b class" -> Vector(100.0))
+      val classifier = MyNaiveBayesWrapper(Some(train))
       val classification = classifier.classify(obs1)
       val classification2 = classifier.classify(obs2)
 
@@ -72,6 +80,23 @@ class NaiveBayesSpec extends Specification
     }.
     andThen(){ case _ :: r :: _ =>
       (r._1.get must_== "b class") and (r._2.get must_== "a class")
+    }
+
+  private[this] val multipleObsTwoClassSce = Scenario("Multiple for Two class").
+    given(myDouble).
+    given(myDouble).
+    when() { case _ :: obs1 :: obs2 :: _ =>
+      val train = Map("a class" -> Vector(.0, 1.0, .5),
+        "b class" -> Vector(50.0, 15.0, 100.0))
+
+      val classifier = MyNaiveBayesWrapper(Some(train))
+      val classification1 = classifier.classify(obs1)
+      val classification2 = classifier.classify(obs2)
+
+      (classification1, classification2)
+    }.
+    andThen(){ case _ :: r :: _ =>
+      (r._1.get must_== "a class") and (r._2.get must_== "b class")
     }
 }
 
